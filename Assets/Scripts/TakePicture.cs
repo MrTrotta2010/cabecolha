@@ -37,6 +37,7 @@ public class TakePicture : MonoBehaviour
 
 		foreach (WebCamDevice webCam in WebCamTexture.devices)
 		{
+			Debug.Log($"Webcam: {webCam.name} is front facing? {webCam.isFrontFacing}");
 			if (webCam.isFrontFacing) frontCamera = new WebCamTexture(webCam.name, Screen.width, Screen.height);
 			else backCamera = new WebCamTexture(webCam.name, Screen.width, Screen.height);
 		}
@@ -75,6 +76,7 @@ public class TakePicture : MonoBehaviour
 
 	public void SwitchCameras()
 	{
+		activeCamera.Stop();
 		if (activeCameraNumber == 1)
 		{
 			activeCamera = frontCamera;
@@ -85,6 +87,7 @@ public class TakePicture : MonoBehaviour
 			activeCamera = backCamera;
 			activeCameraNumber = 1;
 		}
+		activeCamera.Play();
 	}
 
 	public void Snap()
