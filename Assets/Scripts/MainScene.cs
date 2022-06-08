@@ -34,9 +34,19 @@ public class MainScene : MonoBehaviour
 		SceneManager.LoadScene("TakePicture");
 	}
 
-	public void Rotate(float angle)
+	public void RotateY(float angle)
 	{
-		activeBubble.transform.Rotate(Vector3.up, angle);
+		activeBubble.transform.Rotate(Vector3.up, angle, Space.World);
+	}
+
+	public void RotateX(float angle)
+	{
+		activeBubble.transform.Rotate(Vector3.left, angle, Space.World);
+	}
+
+	public void RotateZ(float angle)
+	{
+		activeBubble.transform.Rotate(Vector3.back, angle, Space.World);
 	}
 
 	public void ToggleMarkerMode()
