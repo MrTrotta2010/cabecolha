@@ -1,17 +1,14 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public class TakePicture : MonoBehaviour
 {
 	private bool cameraAvailable;
 	private bool evaluating = false;
-	private int activeCameraNumber;
 	private Texture defaultBackground;
-
-	private WebCamTexture backCamera;
-	private WebCamTexture frontCamera;
-	private WebCamTexture activeCamera;
+	private WebCamTexture activeCamera = null;
 
 	[SerializeField] private RawImage background;
 	[SerializeField] private AspectRatioFitter fit;
@@ -32,33 +29,23 @@ public class TakePicture : MonoBehaviour
 		{
 			Debug.Log("No cameras?");
 			cameraAvailable = false;
+			switchCameraButton.interactable = false;
+			Debug.Log("Deactivating switch camera button");
 			return;
 		}
 
 		foreach (WebCamDevice webCam in WebCamTexture.devices)
 		{
 			Debug.Log($"Webcam: {webCam.name} is front facing? {webCam.isFrontFacing}");
-			if (webCam.isFrontFacing) frontCamera = new WebCamTexture(webCam.name, Screen.width, Screen.height);
-			else backCamera = new WebCamTexture(webCam.name, Screen.width, Screen.height);
+			if (webCam.isFrontFacing) activeCamera = new WebCamTexture(webCam.name, Screen.width, Screen.height);
 		}
 
-		if (backCamera == null || frontCamera == null)
+		if (activeCamera == null)
 		{
-			Debug.Log("Deactivating switch camera button");
-			switchCameraButton.interactable = false;
-			if (backCamera == null && frontCamera == null) return;
+			Debug.Log($"Webcam is null. Setting to {WebCamTexture.devices[0].name}");
+			activeCamera = new WebCamTexture(WebCamTexture.devices[0].name, Screen.width, Screen.height);
 		}
 
-		if (backCamera != null)
-		{
-			activeCamera = backCamera;
-			activeCameraNumber = 1;
-		}
-		else
-		{
-			activeCamera = frontCamera;
-			activeCameraNumber = 2;
-		}
 		cameraAvailable = true;
 		activeCamera.Play();
 		background.texture = activeCamera;
@@ -74,20 +61,47 @@ public class TakePicture : MonoBehaviour
 		}
 	}
 
+	private IEnumerator CycleCams()
+	{
+		WebCamDevice[] d = WebCamTexture.devices;
+		if (d.Length <= 1)
+		{
+			Debug.Log("only one.");
+			if (d.Length == 1) Debug.Log("Name is " + d[0].name);
+			yield break;
+		}
+
+		Debug.Log("0 " + d[0].name);
+		Debug.Log("1 " + d[1].name);
+
+		if (activeCamera.deviceName == d[0].name)
+		{
+			activeCamera.Stop();
+			yield return new WaitForSeconds(.1f);
+			activeCamera.deviceName = d[1].name;
+			yield return new WaitForSeconds(.1f);
+			activeCamera.Play();
+
+			Debug.Log("\"" + activeCamera.deviceName + "\"");
+			yield break;
+		}
+
+		if (activeCamera.deviceName == d[1].name)
+		{
+			activeCamera.Stop();
+			yield return new WaitForSeconds(.1f);
+			activeCamera.deviceName = d[0].name;
+			yield return new WaitForSeconds(.1f);
+			activeCamera.Play();
+
+			Debug.Log("\"" + activeCamera.deviceName + "\"");
+			yield break;
+		}
+	}
+
 	public void SwitchCameras()
 	{
-		activeCamera.Stop();
-		if (activeCameraNumber == 1)
-		{
-			activeCamera = frontCamera;
-			activeCameraNumber = 2;
-		}
-		else
-		{
-			activeCamera = backCamera;
-			activeCameraNumber = 1;
-		}
-		activeCamera.Play();
+		StartCoroutine(CycleCams());
 	}
 
 	public void Snap()
