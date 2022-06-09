@@ -19,6 +19,8 @@ public class TakePicture : MonoBehaviour
 
 	[SerializeField] private Material bubbleFaceMaterial;
 
+	private int flip = 1;
+
 	private void Start()
 	{
 		defaultBackground = background.texture;
@@ -56,7 +58,7 @@ public class TakePicture : MonoBehaviour
 		if (cameraAvailable && !evaluating)
 		{
 			fit.aspectRatio = (float)activeCamera.width / (float)activeCamera.height;
-			background.rectTransform.localScale = new Vector3(1f, activeCamera.videoVerticallyMirrored ? -1f : 1f, 1f);
+			background.rectTransform.localScale = new Vector3(1f, (activeCamera.videoVerticallyMirrored ? -1f : 1f) * flip, 1f);
 			background.rectTransform.localEulerAngles = new Vector3(0f, 0f, -activeCamera.videoRotationAngle);
 		}
 	}
@@ -83,10 +85,10 @@ public class TakePicture : MonoBehaviour
 			activeCamera.Play();
 
 			Debug.Log("\"" + activeCamera.deviceName + "\"");
+			SetFlipMode(d[1]);
 			yield break;
 		}
-
-		if (activeCamera.deviceName == d[1].name)
+		else if (activeCamera.deviceName == d[1].name)
 		{
 			activeCamera.Stop();
 			yield return new WaitForSeconds(.1f);
@@ -95,8 +97,15 @@ public class TakePicture : MonoBehaviour
 			activeCamera.Play();
 
 			Debug.Log("\"" + activeCamera.deviceName + "\"");
+			SetFlipMode(d[0]);
 			yield break;
 		}
+	}
+
+	private void SetFlipMode(WebCamDevice device)
+	{
+		if (device.isFrontFacing) flip = -1;
+		else flip = 1;
 	}
 
 	public void SwitchCameras()
